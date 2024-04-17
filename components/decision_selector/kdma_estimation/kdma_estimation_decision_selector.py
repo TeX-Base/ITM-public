@@ -13,16 +13,20 @@ from components.decision_analyzer.monte_carlo import MonteCarloAnalyzer
 from components.decision_analyzer.event_based_diagnosis import EventBasedDiagnosisAnalyzer
 from components.decision_analyzer.bayesian_network import BayesNetDiagnosisAnalyzer
 from components.decision_analyzer.heuristic_rule_analysis import HeuristicRuleAnalyzer
+from components.probe_dumper.explanation_dumper import ExplanationDumper, Explanation, DumpConfig, DEFAULT_DUMP
 
 _default_weight_file = os.path.join("data", "keds_weights.json")
 _default_drexel_weight_file = os.path.join("data", "drexel_keds_weights.json")
 _default_kdma_case_file = os.path.join("data", "kdma_cases.csv")
 _default_drexel_case_file = os.path.join("data", "sept", "extended_case_base.csv")
 
+
+
 class KDMAEstimationDecisionSelector(DecisionSelector):
     K = 4
     def __init__(self, args):
         self.use_drexel_format = args.selector == 'kedsd'
+        self.dumper = ExplanationDumper(DEFAULT_DUMP)
         if args.casefile is None:
             if self.use_drexel_format:
                 args.casefile = _default_drexel_case_file
@@ -58,6 +62,7 @@ class KDMAEstimationDecisionSelector(DecisionSelector):
         
 
     def select(self, scenario: Scenario, probe: TADProbe, target: KDMAs) -> (Decision, float):
+
         if target is None:
             raise Exception("KDMA Estimation Decision Selector needs an alignment target to operate correctly.")
         minDist: float = math.inf
@@ -68,6 +73,7 @@ class KDMAEstimationDecisionSelector(DecisionSelector):
         best_kdmas = None
         min_kdmas = {kdma.id_.lower():100 for kdma in target.kdmas}
         max_kdmas = {kdma.id_.lower():0   for kdma in target.kdmas}
+        
         for cur_decision in probe.decisions:
             name = cur_decision.value.params.get("casualty", None)
             cur_kdmas = {}
@@ -118,12 +124,15 @@ class KDMAEstimationDecisionSelector(DecisionSelector):
             if self.print_neighbors:
                 util.logger.info(f"New dist: {sqDist} Best Dist: {minDist}")
             cur_case["distance"] = sqDist
+        
         if self.print_neighbors:
             util.logger.info(f"Chosen Decision: {minDecision.value} Dist: {minDist} Estimates: {best_kdmas} Mins: {min_kdmas} Maxes: {max_kdmas}")
-        
+        top_k = self.top_K(cur_case, weights, kdma_name)
         fname = "temp/live_cases" + str(self.index) + ".csv"
         write_case_base(fname, new_cases)
         
+        explanation = Explanation(new_cases, minDecision, minDist)
+        self.dumper.dump(probe, explanation, None) # None is the session uuid for now
         return (minDecision, minDist)
                 
 
