@@ -27,6 +27,7 @@ class KDMAEstimationDecisionSelector(DecisionSelector):
     def __init__(self, args):
         self.use_drexel_format = args.selector == 'kedsd'
         self.dumper = ExplanationDumper(DEFAULT_DUMP)
+        self.explanation = None
         if args.casefile is None:
             if self.use_drexel_format:
                 args.casefile = _default_drexel_case_file
@@ -67,6 +68,7 @@ class KDMAEstimationDecisionSelector(DecisionSelector):
             raise Exception("KDMA Estimation Decision Selector needs an alignment target to operate correctly.")
         minDist: float = math.inf
         minDecision: Decision = None
+        minTopCases: list[dict[str, Any]] = None
         misalign = self.variant.lower() == "misaligned"
         new_cases: list[dict[str, Any]] = list()
         self.index += 1
@@ -121,18 +123,20 @@ class KDMAEstimationDecisionSelector(DecisionSelector):
                 minDist = sqDist
                 minDecision = cur_decision
                 best_kdmas = cur_kdmas
+                minTopCases = self.top_K(cur_case, weights, "moraldesert")
             if self.print_neighbors:
                 util.logger.info(f"New dist: {sqDist} Best Dist: {minDist}")
             cur_case["distance"] = sqDist
         
         if self.print_neighbors:
             util.logger.info(f"Chosen Decision: {minDecision.value} Dist: {minDist} Estimates: {best_kdmas} Mins: {min_kdmas} Maxes: {max_kdmas}")
-        top_k = self.top_K(cur_case, weights, kdma_name)
+        
         fname = "temp/live_cases" + str(self.index) + ".csv"
         write_case_base(fname, new_cases)
-        
-        explanation = Explanation(new_cases, minDecision, minDist)
-        self.dumper.dump(probe, explanation, None) # None is the session uuid for now
+               
+        self.explanation = Explanation(new_cases, minDecision, minDist, minTopCases)
+        # just for a quick and dirty demo. I was going to create individual pkl files for each but ran out of time
+        self.dumper.dump(probe, self.explanation, None) 
         return (minDecision, minDist)
                 
 

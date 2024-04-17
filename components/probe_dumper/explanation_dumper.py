@@ -11,10 +11,11 @@ from typing import Any
 DUMP_PATH = osp.join('components', 'probe_dumper', 'tmp')
 
 class Explanation():
-    def __init__(self, new_cases: list[dict[str, Any]], minDecision: Decision, minDistance: float):
+    def __init__(self, new_cases: list[dict[str, Any]], minDecision: Decision, minDistance: float, topCases: list[Decision]):
         self.new_cases = new_cases
         self.minDecision = minDecision
         self.minDistance = minDistance
+        self.topDecisions = topCases
         
 class DumpConfig:
     def __init__(self):
@@ -71,7 +72,7 @@ class ExplanationDumper:
 
     def dump(self, probe, explanation, session_uuid):
         opened_dump = None
-        new_id = "foo"#ExplanationDumper.fix_probe_id(probe.id_)
+        new_id = ExplanationDumper.fix_probe_id(probe.id_)
         for dump_artifact in os.listdir(self.dump_path):
             if 'pkl' not in dump_artifact:
                 continue
