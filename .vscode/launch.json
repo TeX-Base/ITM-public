@@ -11,6 +11,13 @@
             "program": "explanation_tester.py",
             "console": "integratedTerminal",
             "args": "--session_type adept --kdma moraldesert=.84 --scenario MetricsEval.MD1-Urban --keds --no-dump"
-        }
+        },
+        {
+            "name": "Display Explanation",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "explain.py",
+            "console": "integratedTerminal",
+        },
     ]
 }
