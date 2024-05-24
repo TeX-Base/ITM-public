@@ -135,7 +135,7 @@ class KDMAEstimationDecisionSelector(DecisionSelector):
         write_case_base(fname, new_cases)
                
         self.explanation = Explanation(new_cases, minDecision, minDist, minTopCases)
-        # just for a quick and dirty demo. I was going to create individual pkl files for each but ran out of time
+        # just for a quick and demo.
         self.dumper.dump(probe, self.explanation, None) 
         return (minDecision, minDist)
                 

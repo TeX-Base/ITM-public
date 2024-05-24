@@ -111,11 +111,13 @@ class Driver:
         for cas in probe.state.casualties:
             logger.debug(f"Casualty: {cas.id} Injuries: {cas.injuries} Vitals: {cas.vitals} Tag: {cas.tag}")
 
+        
         # Decide which decision is best
         decision: Decision[Action] = self.select(probe)
+        '''
         if self.dumper is not None:
-            self.dumper.dump(probe, decision, self.session_uuid)
-
+            #self.dumper.dump(probe, decision, self.session_uuid)
+        '''
         # Extract external decision for response
         # url construction
         url = f'http://localhost:8501/?scen={probe.id_}'
